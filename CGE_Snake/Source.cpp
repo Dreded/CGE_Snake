@@ -36,9 +36,9 @@ public:
 	};
 	std::list<coordinate> snake = { {60,15},{61,15},{62,15},{63,15},{64,15},{65,15} };
 	coordinate nFood = { 30,15 };
-	int nScore = 0;
-	int nSnakeDirection = 3;
-	bool bDead = false;
+	int nScore;
+	int nSnakeDirection;
+	bool bDead;
 	float myTime;
 	bool notDone = true;
 
@@ -104,6 +104,7 @@ private:
 			bDead = false;
 			nScore = 0;
 			nSnakeDirection = 3;
+			myTime = 0.0f;
 			snake = { {60,15},{61,15},{62,15},{63,15},{64,15},{65,15} };
 			while (moveFood()); //keep moving food to random location until its not under the snake
 			DrawRect(0, 0, ScreenWidth() - 1, ScreenHeight() - 1, PIXEL_SOLID, FG_GREEN);
