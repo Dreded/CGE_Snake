@@ -22,13 +22,14 @@ public:
 	}
 
 	enum STATES {
+		MAINMENU_STATE,
 		BEGIN_STATE,
 		RUN_STATE,
 		PAUSE_STATE,
 		DEAD_STATE,
 		DRAW_STATE,
 	};
-	STATES STATE = BEGIN_STATE;
+	STATES STATE = MAINMENU_STATE;
 
 	struct coordinate
 	{
@@ -43,7 +44,7 @@ public:
 		int size;
 		std::wstring sprite;
 		GameMenu() : width(0), height(0), size(0), sprite(L"") {}
-		GameMenu(std::wstring _sprite, int _width = 0, int _height = 0,int _size = 0) : sprite(_sprite), width(_width), height(_height), size(_size) {}
+		GameMenu(std::wstring _sprite, int _width = 0, int _height = 0, int _size = 0) : sprite(_sprite), width(_width), height(_height), size(_size) {}
 		GameMenu operator + (const GameMenu& rhs)
 		{
 			return GameMenu(this->sprite + rhs.sprite);
@@ -68,6 +69,7 @@ public:
 
 	GameMenu gmGameOver;
 	GameMenu gmPause;
+	GameMenu gmMainMenu;
 
 	bool moveFood()
 	{
@@ -159,30 +161,46 @@ private:
 		gmGameOver += L"B--== Press <SPACE> to Restart ==-- ";
 		gmGameOver += L"Y   --== Press <Q> to Quit ==--     ";
 
-		//sGameOver += L"███▀▀▀██┼███▀▀▀███┼███▀█▄█▀███┼██▀▀▀.";
-		//sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼█┼┼┼██┼██┼┼┼.";
-		//sGameOver += L"██┼┼┼▄▄▄┼██▄▄▄▄▄██┼██┼┼┼▀┼┼┼██┼██▀▀▀.";
-		//sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██┼┼┼.";
-		//sGameOver += L"███▄▄▄██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██▄▄▄.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"███▀▀▀███┼▀███┼┼██▀┼██▀▀▀┼██▀▀▀▀██▄┼.";
-		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██┼┼┼┼██┼┼┼┼┼██┼.";
-		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██▀▀▀┼██▄▄▄▄▄▀▀┼.";
-		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼█▀┼┼██┼┼┼┼██┼┼┼┼┼██┼.";
-		//sGameOver += L"███▄▄▄███┼┼┼─▀█▀┼┼─┼██▄▄▄┼██┼┼┼┼┼██▄.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼████▄┼┼┼▄▄▄▄▄▄▄┼┼┼▄████┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼▀▀█▄█████████▄█▀▀┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████████████┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██▀▀▀███▀▀▀██┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██┼┼┼███┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████▀▄▀█████┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼███████████┼┼┼┼┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼▄▄▄██┼┼█▀█▀█┼┼██▄▄▄┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼▀▀██┼┼┼┼┼┼┼┼┼┼┼██▀▀┼┼┼┼┼┼┼┼┼.";
-		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼.";
-
+		//sGameOver += L"███▀▀▀██┼███▀▀▀███┼███▀█▄█▀███┼██▀▀▀";
+		//sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼█┼┼┼██┼██┼┼┼";
+		//sGameOver += L"██┼┼┼▄▄▄┼██▄▄▄▄▄██┼██┼┼┼▀┼┼┼██┼██▀▀▀";
+		//sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██┼┼┼";
+		//sGameOver += L"███▄▄▄██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██▄▄▄";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"███▀▀▀███┼▀███┼┼██▀┼██▀▀▀┼██▀▀▀▀██▄┼";
+		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██┼┼┼┼██┼┼┼┼┼██┼";
+		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██▀▀▀┼██▄▄▄▄▄▀▀┼";
+		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼█▀┼┼██┼┼┼┼██┼┼┼┼┼██┼";
+		//sGameOver += L"███▄▄▄███┼┼┼─▀█▀┼┼─┼██▄▄▄┼██┼┼┼┼┼██▄";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼████▄┼┼┼▄▄▄▄▄▄▄┼┼┼▄████┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼▀▀█▄█████████▄█▀▀┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████████████┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██▀▀▀███▀▀▀██┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██┼┼┼███┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████▀▄▀█████┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼███████████┼┼┼┼┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼▄▄▄██┼┼█▀█▀█┼┼██▄▄▄┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼▀▀██┼┼┼┼┼┼┼┼┼┼┼██▀▀┼┼┼┼┼┼┼┼┼";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼";
+		gmMainMenu += L"           /^./^.                                     ";
+		gmMainMenu += L"         _|__|  O|                                    ";
+		gmMainMenu += L"./     /~     ._/ .    --== Press Space to Start ==-- ";
+		gmMainMenu += L" .____|__________/  .                                 ";
+		gmMainMenu += L"        ._______      .                               ";
+		gmMainMenu += L"                `.     .                 .            ";
+		gmMainMenu += L"                  |     |                  .          ";
+		gmMainMenu += L"                 /      /                    .        ";
+		gmMainMenu += L"                /     /                       ..      ";
+		gmMainMenu += L"              /      /                         . .    ";
+		gmMainMenu += L"             /     /                            .  .  ";
+		gmMainMenu += L"           /     /             _----_            .  . ";
+		gmMainMenu += L"          /     /           _-~      ~-_         |   |";
+		gmMainMenu += L"         (      (        _-~    _--_    ~-_     _/   |";
+		gmMainMenu += L"          .      ~-____-~    _-~    ~-_    ~-_-~    / ";
+		gmMainMenu += L"            ~-_           _-~          ~-_       _-~  ";
+		gmMainMenu += L"               ~--______-~                ~-___-~     ";
 		DrawRect(0, 0, ScreenWidth() - 1, ScreenHeight() - 1, PIXEL_SOLID, FG_GREEN);
 		return true;
 	}
@@ -193,6 +211,11 @@ private:
 
 		switch (STATE)
 		{
+		case MAINMENU_STATE:
+			if (GetKey(VK_SPACE).bPressed)
+				STATE = BEGIN_STATE;
+			DrawMenu(gmMainMenu);
+			break;
 		case BEGIN_STATE:
 
 			// Reset everything to known state
