@@ -24,6 +24,7 @@ public:
 	enum STATES {
 		BEGIN_STATE,
 		RUN_STATE,
+		PAUSE_STATE,
 		DEAD_STATE,
 		DRAW_STATE,
 	};
@@ -34,15 +35,39 @@ public:
 		int x;
 		int y;
 	};
+
+	struct GameMenu
+	{
+		int width;
+		int height;
+		int size;
+		std::wstring sprite;
+		GameMenu() : width(0), height(0), size(0), sprite(L"") {}
+		GameMenu(std::wstring _sprite, int _width = 0, int _height = 0,int _size = 0) : sprite(_sprite), width(_width), height(_height), size(_size) {}
+		GameMenu operator + (const GameMenu& rhs)
+		{
+			return GameMenu(this->sprite + rhs.sprite);
+		}
+		GameMenu& operator += (const std::wstring& rhs)
+		{
+			this->sprite += rhs;
+			this->width = rhs.size();
+			this->size += rhs.size();
+			this->height += 1;
+			return *this;
+		}
+	};
 	std::list<coordinate> snake = { {60,15},{61,15},{62,15},{63,15},{64,15},{65,15} };
 	coordinate nFood = { 30,15 };
 	int nScore;
 	int nSnakeDirection;
+	int nRequestedDirection;
 	bool bDead;
-	float myTime;
-	bool notDone = true;
+	float fTimePassed;
+	bool bNotDone = true;
 
-	std::wstring sGameOver;
+	GameMenu gmGameOver;
+	GameMenu gmPause;
 
 	bool moveFood()
 	{
@@ -58,41 +83,111 @@ public:
 			}
 		return false;
 	}
+	bool DrawMenu(GameMenu gmMenu)
+	{
+		short color = FG_RED;
+		int x = 0;
+		int y = 0;
+		int locationX = (ScreenWidth() / 2) - (gmMenu.width / 2);
+		int locationY = (ScreenHeight() / 2) - (gmMenu.height / 2) - 10;
+		DrawRect(locationX - 2, locationY - 2, gmMenu.width + 3, gmMenu.height + 3, PIXEL_SOLID, FG_MAGENTA);
+		for (size_t i = 0; i < gmMenu.size; i++)
+		{
+			if (gmMenu.width == x)
+			{
+				y++;
+				x = 0;
+			}
+			if (gmMenu.sprite[i] == L'█' || gmMenu.sprite[i] == L'▄' || gmMenu.sprite[i] == L'▀') color = FG_WHITE;
+			else if (gmMenu.sprite[gmMenu.width * y] == L'Y') color = FG_YELLOW;
+			else if (gmMenu.sprite[gmMenu.width * y] == L'B') color = FG_BLUE;
+			else color = FG_RED;
+			wchar_t character = gmMenu.sprite[i];
+			if (character == 'Y' || character == 'B') character = ' ';
+			Draw(locationX + x, locationY + y, character, color);
+			x++;
+		}
+		return true;
+	}
 private:
 	bool OnUserCreate()
 	{
-		sGameOver += L"███▀▀▀██┼███▀▀▀███┼███▀█▄█▀███┼██▀▀▀.";
-		sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼█┼┼┼██┼██┼┼┼.";
-		sGameOver += L"██┼┼┼▄▄▄┼██▄▄▄▄▄██┼██┼┼┼▀┼┼┼██┼██▀▀▀.";
-		sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██┼┼┼.";
-		sGameOver += L"███▄▄▄██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██▄▄▄.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"███▀▀▀███┼▀███┼┼██▀┼██▀▀▀┼██▀▀▀▀██▄┼.";
-		sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██┼┼┼┼██┼┼┼┼┼██┼.";
-		sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██▀▀▀┼██▄▄▄▄▄▀▀┼.";
-		sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼█▀┼┼██┼┼┼┼██┼┼┼┼┼██┼.";
-		sGameOver += L"███▄▄▄███┼┼┼─▀█▀┼┼─┼██▄▄▄┼██┼┼┼┼┼██▄.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼████▄┼┼┼▄▄▄▄▄▄▄┼┼┼▄████┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼▀▀█▄█████████▄█▀▀┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████████████┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██▀▀▀███▀▀▀██┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██┼┼┼███┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████▀▄▀█████┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼███████████┼┼┼┼┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼▄▄▄██┼┼█▀█▀█┼┼██▄▄▄┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼▀▀██┼┼┼┼┼┼┼┼┼┼┼██▀▀┼┼┼┼┼┼┼┼┼.";
-		sGameOver += L"┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼.";
+
+		gmPause += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
+		gmPause += L"┼██▀▀▀▀██▄┼███▀▀▀███┼██┼┼┼┼┼██┼██▀▀▀▀███┼██▀▀▀▀▀┼██▀▀▀▀██▄┼.";
+		gmPause += L"┼██┼┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼┼██┼┼┼┼┼┼██┼┼┼┼┼██┼.";
+		gmPause += L"┼██▄▄▄▄▄▀▀┼██▄▄▄▄▄██┼██┼┼┼┼┼██┼██▄▄▄▄▄▄▄┼██▀▀▀▀▀┼██┼┼┼┼┼██┼.";
+		gmPause += L"┼██┼┼┼┼┼┼┼┼██┼┼┼┼┼██┼██┼┼┼┼┼██┼┼┼┼┼┼┼┼██┼██┼┼┼┼┼┼██┼┼┼┼┼██┼.";
+		gmPause += L"┼██┼┼┼┼┼┼┼┼██┼┼┼┼┼██┼███▄▄▄███┼███▄▄▄▄██┼██▄▄▄▄▄┼██▄▄▄▄██▀┼.";
+		gmPause += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
+
+		gmGameOver += L"  ▄████  ▄▄▄       ███▄ ▄███▓▓█████ ";
+		gmGameOver += L" ██▒ ▀█▒▒████▄    ▓██▒▀█▀ ██▒▓█   ▀ ";
+		gmGameOver += L"▒██░▄▄▄░▒██  ▀█▄  ▓██    ▓██░▒███   ";
+		gmGameOver += L"░▓█  ██▓░██▄▄▄▄██ ▒██    ▒██ ▒▓█  ▄ ";
+		gmGameOver += L"░▒▓███▀▒ ▓█   ▓██▒▒██▒   ░██▒░▒████▒";
+		gmGameOver += L" ░▒   ▒  ▒▒   ▓▒█░░ ▒░   ░  ░░░ ▒░ ░";
+		gmGameOver += L"  ░   ░   ▒   ▒▒ ░░  ░      ░ ░ ░  ░";
+		gmGameOver += L"░ ░   ░   ░   ▒   ░      ░      ░   ";
+		gmGameOver += L"      ░       ░  ░       ░      ░  ░";
+		gmGameOver += L"                                    ";
+		gmGameOver += L" ▒█████   ██▒   █▓▓█████  ██▀███    ";
+		gmGameOver += L"▒██▒  ██▒▓██░   █▒▓█   ▀ ▓██ ▒ ██▒  ";
+		gmGameOver += L"▒██░  ██▒ ▓██  █▒░▒███   ▓██ ░▄█ ▒  ";
+		gmGameOver += L"▒██   ██░  ▒██ █░░▒▓█  ▄ ▒██▀▀█▄    ";
+		gmGameOver += L"░ ████▓▒░   ▒▀█░  ░▒████▒░██▓ ▒██▒  ";
+		gmGameOver += L"░ ▒░▒░▒░    ░ ▐░  ░░ ▒░ ░░ ▒▓ ░▒▓░  ";
+		gmGameOver += L"  ░ ▒ ▒░    ░ ░░   ░ ░  ░  ░▒ ░ ▒░  ";
+		gmGameOver += L"░ ░ ░ ▒       ░░     ░     ░░   ░   ";
+		gmGameOver += L"    ░ ░        ░     ░  ░   ░       ";
+		gmGameOver += L"              ░                     ";
+		gmGameOver += L"                                    ";
+		gmGameOver += L"        ██               ██         ";
+		gmGameOver += L"      ████▄   ▄▄▄▄▄▄▄   ▄████       ";
+		gmGameOver += L"         ▀▀█▄█████████▄█▀▀          ";
+		gmGameOver += L"           █████████████            ";
+		gmGameOver += L"           ██▀▀▀███▀▀▀██            ";
+		gmGameOver += L"           ██   ███   ██            ";
+		gmGameOver += L"           ██   ███   ██            ";
+		gmGameOver += L"           █████▀▄▀█████            ";
+		gmGameOver += L"            ███████████             ";
+		gmGameOver += L"            ███████████             ";
+		gmGameOver += L"        ▄▄▄██  █▀█▀█  ██▄▄▄         ";
+		gmGameOver += L"        ▀▀██           ██▀▀         ";
+		gmGameOver += L"          ▀▀           ▀▀           ";
+		gmGameOver += L"                                    ";
+		gmGameOver += L"B--== Press <SPACE> to Restart ==-- ";
+		gmGameOver += L"Y   --== Press <Q> to Quit ==--     ";
+
+		//sGameOver += L"███▀▀▀██┼███▀▀▀███┼███▀█▄█▀███┼██▀▀▀.";
+		//sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼█┼┼┼██┼██┼┼┼.";
+		//sGameOver += L"██┼┼┼▄▄▄┼██▄▄▄▄▄██┼██┼┼┼▀┼┼┼██┼██▀▀▀.";
+		//sGameOver += L"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██┼┼┼.";
+		//sGameOver += L"███▄▄▄██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██▄▄▄.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"███▀▀▀███┼▀███┼┼██▀┼██▀▀▀┼██▀▀▀▀██▄┼.";
+		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██┼┼┼┼██┼┼┼┼┼██┼.";
+		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██▀▀▀┼██▄▄▄▄▄▀▀┼.";
+		//sGameOver += L"██┼┼┼┼┼██┼┼┼██┼┼█▀┼┼██┼┼┼┼██┼┼┼┼┼██┼.";
+		//sGameOver += L"███▄▄▄███┼┼┼─▀█▀┼┼─┼██▄▄▄┼██┼┼┼┼┼██▄.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼████▄┼┼┼▄▄▄▄▄▄▄┼┼┼▄████┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼▀▀█▄█████████▄█▀▀┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████████████┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██▀▀▀███▀▀▀██┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼██┼┼┼███┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼█████▀▄▀█████┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼┼┼███████████┼┼┼┼┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼▄▄▄██┼┼█▀█▀█┼┼██▄▄▄┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼▀▀██┼┼┼┼┼┼┼┼┼┼┼██▀▀┼┼┼┼┼┼┼┼┼.";
+		//sGameOver += L"┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼.";
 
 		DrawRect(0, 0, ScreenWidth() - 1, ScreenHeight() - 1, PIXEL_SOLID, FG_GREEN);
 		return true;
 	}
 	bool OnUserUpdate(float fElapsedTime)
 	{
-		//Check Keys that apply to all states
-		if (GetKey('Q').bPressed)
-			notDone = false;
 
 		// =========================================== START OF STATES ==============================================
 
@@ -104,34 +199,56 @@ private:
 			bDead = false;
 			nScore = 0;
 			nSnakeDirection = 3;
-			myTime = 0.0f;
+			nRequestedDirection = nSnakeDirection;
+			fTimePassed = 0.0f;
 			snake = { {60,15},{61,15},{62,15},{63,15},{64,15},{65,15} };
+
+			// For Testing
+			for (int i = 0; i < 500; i++)
+				snake.push_back({ snake.back().x,snake.back().y });
+			 nScore = snake.size() / 5 - 6;
+
 			while (moveFood()); //keep moving food to random location until its not under the snake
 			DrawRect(0, 0, ScreenWidth() - 1, ScreenHeight() - 1, PIXEL_SOLID, FG_GREEN);
 			STATE = RUN_STATE;
 			break;
 
 		case RUN_STATE:
+			if (GetKey(VK_SPACE).bPressed)
+				STATE = PAUSE_STATE;
 
-			// Check for Key presses
-			if (GetKey(VK_LEFT).bPressed)
-			{
-				nSnakeDirection++;
-				if (nSnakeDirection == 4)
-					nSnakeDirection = 0;
-			}
-			if (GetKey(VK_RIGHT).bPressed)
-			{
-				nSnakeDirection--;
-				if (nSnakeDirection == -1)
-					nSnakeDirection = 3;
-			}
+			// Check for Key presses and dont allow us to move directly back into our body.
+
+			if (GetKey(VK_UP).bPressed && nSnakeDirection != 2)
+				nRequestedDirection = 0;
+			if (GetKey(VK_RIGHT).bPressed && nSnakeDirection != 3)
+				nRequestedDirection = 1;
+			if (GetKey(VK_DOWN).bPressed && nSnakeDirection != 0)
+				nRequestedDirection = 2;
+			if (GetKey(VK_LEFT).bPressed && nSnakeDirection != 1)
+				nRequestedDirection = 3;
+
+
+			//This is for Nokia style snake steering(from snakes perspective, makes it easy to do quick movmenets but the confusion often gets you killed)
+			//if (GetKey(VK_LEFT).bPressed)
+			//{
+			//	nSnakeDirection++;
+			//	if (nSnakeDirection == 4)
+			//		nSnakeDirection = 0;
+			//}
+			//if (GetKey(VK_RIGHT).bPressed)
+			//{
+			//	nSnakeDirection--;
+			//	if (nSnakeDirection == -1)
+			//		nSnakeDirection = 3;
+			//}
 
 			//Only update snake location every <FPS>.0f frames
-			myTime += fElapsedTime;
-			if (1 / myTime <= 10.0f)
+			fTimePassed += fElapsedTime;
+			if (1 / fTimePassed <= 10.0f)
 			{
-				myTime = 0.0f;
+				fTimePassed = 0.0f;
+				nSnakeDirection = nRequestedDirection;
 				switch (nSnakeDirection)
 				{
 				case 0: // UP
@@ -191,34 +308,25 @@ private:
 			if (bDead) STATE = DEAD_STATE;
 			break;
 
+		case PAUSE_STATE:
+			// Check for Key presses
+			if (GetKey(VK_SPACE).bPressed)
+				STATE = RUN_STATE;
+			DrawMenu(gmPause);
+			Sleep(10);
+
+			// We are waiting for Space to go to RUN_STATE
+			break;
+
 		case DEAD_STATE:
 
 			// Check for Key presses
+			if (GetKey('Q').bPressed)
+				bNotDone = false;
 			if (GetKey(VK_SPACE).bPressed)
 				STATE = BEGIN_STATE;
 
-			// Set Draw location for Death Screen
-			int x = 0;
-			int y = 0;
-			int locationX = ScreenWidth() / 2 - 18;
-			int locationY = ScreenHeight() / 2 - 18;
-			DrawRect(locationX - 2, locationY - 2, 39, 29, PIXEL_SOLID, FG_MAGENTA);
-			for (size_t i = 0; i < sGameOver.size(); i++)
-			{
-				if (sGameOver[i] == L'.')
-				{
-					y++;
-					x = 0;
-					i += 1;
-				}
-				m_bufScreen[(locationY + y) * m_nScreenWidth + locationX + x].Char.UnicodeChar = sGameOver[i];
-				m_bufScreen[(locationY + y) * m_nScreenWidth + locationX + x].Attributes = (sGameOver[i] == L'█' || sGameOver[i] == L'▄' || sGameOver[i] == L'▀') ? FG_WHITE : FG_RED;
-				x++;
-			}
-			std::wstring text = L"--== Press <SPACE> to Restart ==--";
-			DrawString(ScreenWidth() / 2 - text.size() / 2, locationY + y + 1, text, FG_BLUE);
-			text = L"--== Press <Q> to Quit ==--";
-			DrawString(ScreenWidth() / 2 - text.size() / 2, locationY + y + 2, text, FG_YELLOW);
+			DrawMenu(gmGameOver);
 			Sleep(10);
 
 			// We are waiting for Space to go to BEGIN_STATE
@@ -227,7 +335,7 @@ private:
 
 		// =========================================== END OF STATES ==============================================
 
-		return notDone;
+		return bNotDone;
 	}
 };
 
