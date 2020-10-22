@@ -204,9 +204,9 @@ private:
 			snake = { {60,15},{61,15},{62,15},{63,15},{64,15},{65,15} };
 
 			// For Testing
-			for (int i = 0; i < 500; i++)
-				snake.push_back({ snake.back().x,snake.back().y });
-			 nScore = snake.size() / 5 - 6;
+			//for (int i = 0; i < 500; i++)
+			//	snake.push_back({ snake.back().x,snake.back().y });
+			// nScore = snake.size() / 5 - 6;
 
 			while (moveFood()); //keep moving food to random location until its not under the snake
 			DrawRect(0, 0, ScreenWidth() - 1, ScreenHeight() - 1, PIXEL_SOLID, FG_GREEN);
